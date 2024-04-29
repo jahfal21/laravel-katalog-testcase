@@ -67,7 +67,7 @@
                                                     <span class="badge bg-danger">Negative</span>
                                                 @endif
                                             </td>
-                                            <td>{{$testcase->test_step}}</td>
+                                            <td><pre>{{$testcase->test_step}}<pre></td>
                                             <td><pre>{{$testcase->test_data}}</pre></td>
                                             <td>{{$testcase->expected_result}}</td>
                                             <td>{{$testcase->actual_result}}</td>
@@ -165,9 +165,21 @@
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h3 class="mb-0">List Test Case</h3>
                             <div class="input-group" style="width: 200px;">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search...">
+                                <label class="input-group-text" for="filterType">Filter:</label>
+                                <select class="form-select" id="filterType">
+                                    <option value="default">Default</option>
+                                    <option value="module">Module</option>
+                                </select>
                             </div>
+                            <div class="input-group" style="width: 200px;">
+                                <label class="input-group-text" for="filterValue">Value</label>
+                                <select class="form-select" id="filterValue" disabled>
+                                </select>
+                            </div>
+                        <div class="input-group" style="width: 200px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search...">
+                        </div>
                         </div>
                         <div class="card-body" style="overflow-x: auto;">
                             @if ($data_testcase->isEmpty())
@@ -202,7 +214,7 @@
                                                         <span class="badge bg-danger">Negative</span>
                                                     @endif
                                                 </td>
-                                                <td>{{$testcase->test_step}}</td>
+                                                <td><pre>{{$testcase->test_step}}<pre></td>
                                                 <td><pre>{{$testcase->test_data}}</pre></td>
                                                 <td>{{$testcase->expected_result}}</td>
                                                 <td>{{$testcase->actual_result}}</td>                          
@@ -274,23 +286,69 @@
     </div>
 
     <script>
-        $(document).ready(function () {
-            $('#searchInput').on('keyup', function () {
-                var searchText = $(this).val().toLowerCase();
-                filterData(searchText);
-            });
+    $(document).ready(function () {
+        $('#searchInput').on('keyup', function () {
+            var searchText = $(this).val().toLowerCase();
+            filterData(searchText);
+        });
 
-            function filterData(searchText) {
-                $('tbody tr').filter(function () {
-                    var rowText = $(this).text().toLowerCase();
-                    var showRow = true;
-                    if (searchText !== '') {
-                        showRow = rowText.indexOf(searchText) > -1;
-                    }
-                    $(this).toggle(showRow);
-                });
+        $('#filterType').change(function() {
+            var selectedFilter = $(this).val();
+            if (selectedFilter === 'default') {
+                $('#filterValue').empty().attr('disabled', true);
+                filterData('');
+            } else if (selectedFilter === 'module') {
+                populateFilterOptions(selectedFilter);
+                $('#filterValue').attr('disabled', false).val('').focus();
             }
         });
+
+        $('#filterValue').change(function() {
+            var filterValue = $(this).val();
+            filterDataByFilterValue(filterValue);
+        });
+
+        function populateFilterOptions(filterType) {
+            var options = [];
+            var data = {!! json_encode($data_testcase) !!};
+
+            var select = $('#filterValue');
+            select.empty().attr('disabled', true);
+
+            if (filterType === 'module') {
+                options = [...new Set(data.map(item => item.module_name))];
+            }
+
+            $.each(options, function(index, value) {
+                select.append('<option value="' + value + '">' + value + '</option>');
+            });
+            select.attr('disabled', false);
+        }
+
+        function filterData(searchText) {
+            var filterValue = $('#filterValue').val();
+            var dataRows = $('tbody tr');
+
+            dataRows.each(function () {
+                var rowText = $(this).text().toLowerCase();
+                var showRow = true;
+                if (searchText !== '') {
+                    showRow = rowText.indexOf(searchText) > -1;
+                }
+                if ($('#filterType').val() === 'module' && filterValue !== '') {
+                    var filterText = $(this).find('td:eq(1)').text().toLowerCase(); // Index 1 for module name
+                    showRow = showRow && filterText.includes(filterValue.toLowerCase());
+                }
+                $(this).toggle(showRow);
+            });
+        }
+
+        function filterDataByFilterValue(filterValue) {
+            var searchText = $('#searchInput').val().toLowerCase();
+            filterData(searchText);
+        }
+    });
     </script>
+
 
 @endsection
