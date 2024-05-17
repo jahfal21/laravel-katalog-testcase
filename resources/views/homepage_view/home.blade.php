@@ -1,7 +1,7 @@
 @extends('homelayout.layout')
 
 @section('title')
-    Home Page
+    Home Page 
 @endsection
 
 @section('content')
@@ -228,9 +228,9 @@
                 </div>
             @endif
         </div>
-    </div>
-
-    {{-- Modal Add Test Case --}}
+    </div> 
+   
+    {{-- Modal Add Test Case jahfal --}}
     <div class="modal fade" id="addTestCaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
